@@ -1,0 +1,3 @@
+/home/normalcrazy/Desktop/API_project_2022/cmake-build-debug/CMakeFiles/API_project_2022.dir
+/home/normalcrazy/Desktop/API_project_2022/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/normalcrazy/Desktop/API_project_2022/cmake-build-debug/CMakeFiles/rebuild_cache.dir
