@@ -40,14 +40,13 @@ struct position_into_word {
 struct words *words;
 
 int main() {
-    //setup();
-    char temp = getchar_unlocked();
-    temp = -1;
-    printf("%c", temp);
-    if(temp!=-1){
-        printf("ciao");
+    setup();
+    int c;
+    while (1) {
+        c = getchar_unlocked();            // Get one character from the input
+        if (c == EOF) { break; }  // Exit the loop if we receive EOF ("end of file")
+        putchar(c);               // Put the character to the output
     }
-    printf("%c", temp);
     return 0;
 }
 
@@ -71,8 +70,8 @@ void new_game() {
     };
     temp = getchar_unlocked();
     while(temp != EOF){
-        while (temp != '+' || temp!= -1) {
-            while (temp != '\n' || temp!= -1) {
+        while (temp != '+' && temp!= EOF) {
+            while (temp != '\n' && temp!= EOF) {
                 printf("%c", temp);
                 temp = getchar_unlocked();
             }
@@ -100,6 +99,8 @@ void read_command() {
             printf("%c",temp);
         }
     }else if( temp == 'i'){
+        printf("+i");
+
         for (int i = 0; i <16 ; i++) {
             temp = getchar_unlocked();
             printf("%c",temp);
@@ -107,17 +108,18 @@ void read_command() {
 
         while (temp != '+') {
             while (temp != '\n') {
-                printf("%c", temp);
+
                 temp = getchar_unlocked();
+                printf("%c", temp);
             }
-            printf("%c",temp);
+
             temp = getchar_unlocked();
         }
         for (int i = 0; i <15 ; i++) {
             temp = getchar_unlocked();
             printf("%c",temp);
         }
-        printf("%c",temp);
+
     }
 
 }
