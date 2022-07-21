@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 struct character_node {
     char c;
@@ -40,25 +41,15 @@ struct information_node {
 struct information_tree {
     struct information_node *root;
 };
-struct information_array{
-    char c;
-    int *position;
-    int *noposition;
-    int min;
-    int number_correct;
-    int counter_noposition;
-    int counter_position;
-};
-
 
 void setup();
 
 void controlla_corrispondeza();
-
+void liberaAlberi(struct character_node *characterNode);
 void insert_word_into_dictionary();
-
+void liberaAlberi_informazione(struct information_node *characterNode);
 void read_command();
-
+void liberaParola(struct word_node *characterNode);
 void new_game();
 int confronto_stringhe(char *c1,char *c2,int len,int position);
 void tree_insert_word_node(struct word_tree *T, struct word_node *z);
@@ -117,17 +108,28 @@ void setup() {
     dictionary = malloc((sizeof(char)) * length_words * 10);
     number_of_words_into_dictionary = 0;
     insert_word_into_dictionary();
+    read_command();
     free(dictionary);
 }
 
 void new_game() {
     char temp = getchar_unlocked();
     end_game = 0;
+    if(word_to_search!=NULL){
+        liberaAlberi(word_to_search->root);
+        free(word_to_search);
+        word_to_search =NULL;
+    }
     word_to_search = malloc(sizeof(struct character_tree));
-    word_to_search->root = malloc(sizeof(struct character_node));
+    //word_to_search->root = malloc(sizeof(struct character_node));
+    if(information!=NULL){
+        liberaAlberi_informazione(information->root);
+        free(information);
+        information =NULL;
+    }
     information = malloc(sizeof(struct information_tree));
     //TODO
-    information->root = malloc(sizeof(struct information_node));
+    //information->root = malloc(sizeof(struct information_node));
     word_to_search->root = NULL;
     information->root = NULL;
     int i = 0;
@@ -135,7 +137,10 @@ void new_game() {
         struct character_node *character = malloc(sizeof(struct character_node));
         character->c = temp;
         character->position = i;
-
+        character->correct = 0;
+        character->p =NULL;
+        character->right = NULL;
+        character->left = NULL;
         tree_insert_character_node(word_to_search, character);
         i++;
         temp = getchar_unlocked();
@@ -150,8 +155,13 @@ void new_game() {
         while (temp != '+' && temp != EOF) {
             i = 0;
             char *word = malloc(sizeof (char)*length_words);
+            if(word_to_check!=NULL){
+                liberaAlberi(word_to_check->root);
+                free(word_to_check);
+                word_to_check = NULL;
+            }
             word_to_check = malloc(sizeof(struct character_tree));
-            word_to_check->root = malloc(sizeof(struct character_node));
+            //word_to_check->root = malloc(sizeof(struct character_node));
             word_to_check->root=NULL;
             while (temp != '\n'  && temp != EOF) {
                 struct character_node *character = malloc(sizeof(struct character_node));
@@ -168,6 +178,7 @@ void new_game() {
             }
 
             int j = check_if_word_exist(dictionary,word);
+            free(word);
             if(j==0){
                 printf("not_exists\n");
 
@@ -182,39 +193,97 @@ void new_game() {
                     end_game=1;
                 }
             }
-
-            free(word_to_check);
-            word_to_check = NULL;
             temp = getchar_unlocked();
+            if(word_to_check!=NULL){
+                liberaAlberi(word_to_check->root);
 
-            if(end_game==1){
-                printf("Carattere: %c",temp);
             }
+            free(word_to_check);
+            word_to_check =NULL;
+
+
         }
-        if(end_game==1){
-            printf("Carattere: %c",temp);
-        }
+
+
         read_command();
         temp = getchar_unlocked();
     }
 
 }
 
+void liberaAlberi(struct character_node *characterNode){
+
+
+    if(characterNode==NULL) {
+        return;
+    }
+    liberaAlberi(characterNode->left);
+    liberaAlberi(characterNode->right);
+    free(characterNode);
+
+}
+void liberaParola(struct word_node *characterNode) {
+
+
+    if (characterNode == NULL) {
+        return;
+    }
+    liberaParola(characterNode->left);
+    liberaParola(characterNode->right);
+
+    free(characterNode->c);
+    free(characterNode);
+
+}
+
+void liberaAlberi_informazione(struct information_node *characterNode){
+
+
+
+    if (characterNode == NULL) {
+        return;
+    }
+    liberaAlberi_informazione(characterNode->left);
+    liberaAlberi_informazione(characterNode->right);
+
+    free(characterNode->position);
+    free(characterNode->noposition);
+    free(characterNode);
+
+}
 void read_command() {
     char temp = getchar_unlocked();
-    if(end_game==1){
-        printf("Carattere: %c",temp);
-    }
     if (temp == 'n') {
         prova++;
         for (int i = 0; i < 13; i++) {
             temp = getchar_unlocked();
         }
         free(filter_dictionary);
-        free(word_to_search);
-        free(word_to_check);
-        free(information);
-        free(dictionary_filter);
+        if(word_to_search!=NULL){
+            liberaAlberi(word_to_search->root);
+            free(word_to_search);
+            word_to_search=NULL;
+        }
+
+
+        if(word_to_check!=NULL){
+            liberaAlberi(word_to_check->root);
+            free(word_to_check);
+
+            word_to_check = NULL;
+        }
+
+        if(information!=NULL){
+            liberaAlberi_informazione(information->root);
+            free(information);
+        information = NULL;
+        }
+        if(dictionary_filter!=NULL){
+            liberaParola(dictionary_filter->root);
+            free(dictionary_filter);
+            dictionary_filter = NULL;
+
+        }
         free(position_word_filtarted);
        number = 0;
         end_game = 0;
@@ -265,8 +334,9 @@ void read_command() {
 }
 
 void ordina(){
+
     struct word_tree* word_tree = malloc(sizeof (struct word_tree));
-    word_tree->root = malloc(sizeof (struct word_node));
+    //word_tree->root = malloc(sizeof (struct word_node));
     word_tree->root = NULL;
     int i = 0;
     if(number_word_filtated!=0){
@@ -318,6 +388,11 @@ void ordina(){
         word_node = tree_successor_word_node(word_node);
     }
 
+    if(word_tree!=NULL){
+        liberaParola(word_tree->root);
+        free(word_tree);
+
+    }
 
 
 }
@@ -408,10 +483,23 @@ if(correct_word==length_words){
              numeri_piu = 0;
              numeri_tarttino = 0;
              numeri_sbarra = 0;
-            struct information_node* node_info;
+            struct information_node* node_info = NULL;
             if (node == NULL) {
+                if(node_info!=NULL){
+                    liberaAlberi_informazione(node_info);
+                    free(node_info);
+                }
                   node_info = malloc(sizeof(struct information_node));
                   node_info->c = node_check->c;
+                  node_info->counter_position=0;
+                  node_info->counter_noposition = 0;
+                  node_info->noposition = NULL;
+                  node_info->position = NULL;
+                  node_info->p=NULL;
+                  node_info->right=NULL;
+                  node_info->left = NULL;
+                  node_info->min = 0;
+                  node_info->number_correct = -1;
                 tree_insert_information_node(information,node_info);
             }else{
                 node_info = node;
@@ -421,10 +509,11 @@ if(correct_word==length_words){
                     if (outpi[node_check->position] == '+') {
                         numeri_piu++;
                         node_info->counter_position++;
-                        node_info->position = realloc(node_info->position, node_info->counter_position * sizeof(int));
+                        node_info->position = realloc(node_info->position, node_info->counter_position * 20000);
                         node_info->position[node_info->counter_position - 1] = node_check->position;
                         //printf("%c --- %d\n",node_info->c,node_info->position[node_info->counter_position - 1]+1);
                     } else if (outpi[node_check->position] == '|') {
+
                         numeri_tarttino++;
                         node_info->counter_noposition++;
                         node_info->noposition = realloc(node_info->noposition,
@@ -577,6 +666,10 @@ void confronto() {
 
                 number_word_filtated++;
                 if(number_word_filtated==1){
+                    if(position_word_filtarted!=NULL){
+                        free(position_word_filtarted);
+                        position_word_filtarted=NULL;
+                    }
                     position_word_filtarted = malloc(sizeof(int) * number_word_filtated);
 
                 }else{
@@ -669,6 +762,7 @@ void confronto() {
             i++;
 
         }
+            free(position_word_filtarted);
             number_word_filtated = new_number_word_filtrated;
             position_word_filtarted = new_position_filtrated;
 
@@ -764,9 +858,13 @@ void confronta_nuove() {
 
         number_word_filtated++;
         if(number_word_filtated==1){
+            if(position_word_filtarted!=NULL){
+                free(position_word_filtarted);
+            }
             position_word_filtarted = malloc(sizeof(int) * number_word_filtated);
 
         }else{
+
             position_word_filtarted = realloc(position_word_filtarted, sizeof(int) * number_word_filtated);
 
         }
@@ -868,7 +966,6 @@ void insert_word_into_dictionary() {
         //insert tree characters into tree words
         temp = getchar_unlocked();
     }
-    read_command();
 }
 
 struct character_node *tree_search_character_node(struct character_node *x, char k) {

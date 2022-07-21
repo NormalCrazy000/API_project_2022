@@ -1,0 +1,53 @@
+desc: --massif-out-file=out
+cmd: ./fine
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=158189
+mem_heap_B=1024
+mem_heap_extra_B=8
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=159134
+mem_heap_B=1024
+mem_heap_extra_B=16
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=160425
+mem_heap_B=1024
+mem_heap_extra_B=16
+mem_stacks_B=0
+heap_tree=peak
+n2: 1024 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 1024 0x48DF2D3: _IO_file_doallocate (filedoalloc.c:101)
+  n1: 1024 0x48EF02F: _IO_doallocbuf (genops.c:347)
+   n1: 1024 0x48EDDFB: _IO_file_underflow@@GLIBC_2.2.5 (fileops.c:486)
+    n1: 1024 0x48EF0E5: _IO_default_uflow (genops.c:362)
+     n1: 1024 0x48C31DF: __vfscanf_internal (vfscanf-internal.c:628)
+      n1: 1024 0x48C21EC: __isoc99_fscanf (isoc99_fscanf.c:30)
+       n1: 1024 0x10B023: setup (main.c:116)
+        n0: 1024 0x10916E: main (main.c:111)
+ n0: 0 in 1 place, below massif's threshold (1.00%)
+#-----------
+snapshot=4
+#-----------
+time=160425
+mem_heap_B=0
+mem_heap_extra_B=8
+mem_stacks_B=0
+heap_tree=empty
