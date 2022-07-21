@@ -134,11 +134,7 @@ void setup() {
     dictionary = malloc((sizeof(char)) * length_words * 10);
     number_of_words_into_dictionary = 0;
     insert_word_into_dictionary();
-    char temp = 0;
-    while (temp!=EOF){
-        read_command();
-        temp = getchar_unlocked();
-    }
+    read_command();
     free(dictionary);
 }
 
