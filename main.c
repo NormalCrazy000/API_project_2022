@@ -61,15 +61,15 @@ void read_command();
 
 void new_game();
 int confronto_stringhe(char *c1,char *c2,int len,int position);
-
+void tree_insert_word_node(struct word_tree *T, struct word_node *z);
 struct character_node *tree_successor_character_node(struct character_node *x);
 struct information_node *tree_minimum_information_node(struct information_node *x);
 int numero_di_istanze(struct character_node *x, char k);
-
+int confronto_stringhe_fine(char *c1,char *c2,int len);
 int numero_di_istanze(struct character_node *x, char k);
-
+struct word_node *tree_minimum_word_node(struct word_node *x);
 struct character_node *tree_search_character_node(struct character_node *x, char k);
-void confronta_nuove(int numero_parole);
+void confronta_nuove();
 int numero_di_istanze_corretta(struct character_node *x, char k);
 
 int numero_di_istanze_NoncorrettaPrimaDiI(struct character_node *x, char k, int position);
@@ -85,11 +85,14 @@ void tree_insert_information_node(struct information_tree *T, struct information
 //struct characters_word_node *tree_search_characters_word_three(struct characters_word_three *characters_word_three,struct characters_word_node *characters_word_node,char c);
 //void rb_insert_fixup_characters_word_three(struct characters_word_three *T, struct characters_word_node *z);
 int check_if_word_exist(char *dic,char *word);
+struct word_node *tree_successor_word_node(struct word_node *x);
+void ordina();
 int length_words;
 char *dictionary;
 char *filter_dictionary;
 int number_of_words_into_dictionary;
 int buffer = 10;
+int test = 0;
 int lenght;
 struct character_tree *word_to_search;
 struct character_tree *word_to_check;
@@ -100,6 +103,8 @@ int end_game = 0;
 int number_word_filtated;
 int *position_word_filtarted;
 int game;
+int prova = 1;
+int start = 0;
 struct information_array* information_array;
 int main() {
     setup();
@@ -171,14 +176,23 @@ void new_game() {
                 number--;
                 if(number==0){
                     if(end_game==0){
+
                         printf("ko\n");
                     }
                     end_game=1;
                 }
             }
+
             free(word_to_check);
             word_to_check = NULL;
             temp = getchar_unlocked();
+
+            if(end_game==1){
+                printf("Carattere: %c",temp);
+            }
+        }
+        if(end_game==1){
+            printf("Carattere: %c",temp);
         }
         read_command();
         temp = getchar_unlocked();
@@ -188,8 +202,11 @@ void new_game() {
 
 void read_command() {
     char temp = getchar_unlocked();
-
+    if(end_game==1){
+        printf("Carattere: %c",temp);
+    }
     if (temp == 'n') {
+        prova++;
         for (int i = 0; i < 13; i++) {
             temp = getchar_unlocked();
         }
@@ -199,7 +216,6 @@ void read_command() {
         free(information);
         free(dictionary_filter);
         free(position_word_filtarted);
-
        number = 0;
         end_game = 0;
          number_word_filtated = 0;
@@ -207,7 +223,7 @@ void read_command() {
 
         new_game();
     } else if (temp == 's') {
-        printf("output\n");
+        ordina();
         for (int i = 0; i < 15; i++) {
             temp = getchar_unlocked();
         }
@@ -216,15 +232,20 @@ void read_command() {
 
         for (int i = 0; i < 16; i++) {
             temp = getchar_unlocked();
+
         }
-        int n = 0;
+        temp = getchar_unlocked();
+
         while (temp != '+') {
             int i = 0;
             while (temp != '\n') {
-                temp = getchar_unlocked();
                 dictionary[number_of_words_into_dictionary * length_words + i] = temp;
+                temp = getchar_unlocked();
+
                 i++;
             }
+            confronta_nuove();
+
             number_of_words_into_dictionary++;
             buffer++;
             if (buffer % 10 == 0) {
@@ -232,15 +253,72 @@ void read_command() {
             }
             //insert tree characters into tree words
             temp = getchar_unlocked();
-            n++;
         }
-        confronta_nuove(n);
+
         //Check if new word must be filtarted
         for (int i = 0; i < 15; i++) {
             temp = getchar_unlocked();
         }
 
     }
+
+}
+
+void ordina(){
+    struct word_tree* word_tree = malloc(sizeof (struct word_tree));
+    word_tree->root = malloc(sizeof (struct word_node));
+    word_tree->root = NULL;
+    int i = 0;
+    if(number_word_filtated!=0){
+        while (i<number_word_filtated){
+            struct word_node *word_node = malloc(sizeof(struct word_node));
+            word_node->c = malloc(sizeof(int)*length_words);
+            int k = 0;
+            while (k<length_words){
+                word_node->c[k] = dictionary[position_word_filtarted[i]+k];
+                k++;
+            }
+            word_node->left = NULL;
+            word_node->right = NULL;
+            word_node->p = NULL;
+            tree_insert_word_node(word_tree, word_node);
+            i++;
+        }
+    }else{
+        while (i<number_of_words_into_dictionary){
+            struct word_node *word_node = malloc(sizeof(struct word_node));
+            word_node->c = malloc(sizeof(int)*length_words);
+            int k = 0;
+            while (k<length_words){
+                word_node->c[k] = dictionary[i*length_words+k];
+                k++;
+            }
+            word_node->left = NULL;
+            word_node->right = NULL;
+            word_node->p = NULL;
+            tree_insert_word_node(word_tree, word_node);
+            i++;
+        }
+    }
+
+    struct word_node *word_node = NULL;
+    if(word_tree->root!=NULL){
+        word_node = tree_minimum_word_node(word_tree->root);
+    }
+
+    while (word_node!=NULL){
+        int k = 0;
+
+        while (k<length_words){
+            printf("%c",word_node->c[k]);
+            k++;
+        }
+        printf("\n");
+
+        word_node = tree_successor_word_node(word_node);
+    }
+
+
 
 }
 
@@ -274,6 +352,7 @@ void controlla_corrispondeza() {
         }
     }
 if(correct_word==length_words){
+
     printf("ok\n");
     end_game = 1;
     return;
@@ -395,8 +474,9 @@ if(correct_word==length_words){
     for (int i = 0; i < length_words; ++i) {
         printf("%c", outpi[i]);
     }
-
+    printf("\n");
     printf("%d\n",number_word_filtated);
+
 
 
 }
@@ -415,12 +495,29 @@ int confronto_stringhe(char *c1,char *c2,int len,int position){
     }
     return 2;
 }
+//0 first string is less
+//1 second string is less
+//2 equal
+int confronto_stringhe_fine(char *c1,char *c2,int len){
+    int i = 0;
+    while(i<len){
+        if(c1[i]>c2[i]){
+            return 1;
+        } else if(c1[i]<c2[i]){
+            return 0;
+        }
+        i++;
+    }
+    return 2;
+}
 void confronto() {
     int i = 0;
 
 
-    struct information_node *node = tree_minimum_information_node(information->root);
-
+    struct information_node *node = NULL;
+    if(information->root!=NULL){
+         node = tree_minimum_information_node(information->root);
+    }
     while (node != NULL){
     if (number_word_filtated == 0) {
         int *pos = node->position;
@@ -587,34 +684,29 @@ void confronto() {
 }
 
 //TODO
-void confronta_nuove(int numero_parole) {
+void confronta_nuove() {
     int i = 0;
+    struct information_node *node = NULL;
+    int save = 0;
+    if(information->root!=NULL){
+        save=1;
+        node = tree_minimum_information_node(information->root);
+    }
 
-
-    struct information_node *node = tree_minimum_information_node(information->root);
-    int final_number_word_filtrated = 0;
-    int *final_position_filtrated = NULL;
-    final_number_word_filtrated = numero_parole;
     while (node != NULL) {
 
         int *pos = node->position;
         int *nopos = node->noposition;
         int min = node->min;
         int correct = node->number_correct;
-        int save = 1;
-
-        int new_number_word_filtrated = 0;
-        int *new_position_filtrated = NULL;
-
 
         i = 0;
 
-        while (i < final_number_word_filtrated) {
-            save = 1;
+
             int j = 0;
 
             while (j < node->counter_position) {
-                if (dictionary[position_word_filtarted[i] + pos[j]] != node->c) {
+                if (dictionary[number_of_words_into_dictionary*length_words + pos[j]] != node->c) {
                     save = 0;
 
 
@@ -628,7 +720,7 @@ void confronta_nuove(int numero_parole) {
 
                 while (j < node->counter_noposition) {
 
-                    if (dictionary[position_word_filtarted[i] + nopos[j]] == node->c) {
+                    if (dictionary[number_of_words_into_dictionary*length_words + nopos[j]] == node->c) {
                         save = 0;
                         break;
                     }
@@ -642,7 +734,7 @@ void confronta_nuove(int numero_parole) {
                 j = 0;
                 int x = 0;
                 while (j < length_words) {
-                    if (dictionary[position_word_filtarted[i] + j] == node->c) {
+                    if (dictionary[number_of_words_into_dictionary*length_words  + j] == node->c) {
                         x++;
                     }
                     j++;
@@ -660,30 +752,28 @@ void confronta_nuove(int numero_parole) {
                 }
 
             }
-            if (save == 1) {
 
-
-                new_number_word_filtrated++;
-                if (new_number_word_filtrated == 1) {
-                    new_position_filtrated = malloc(sizeof(int) * new_number_word_filtrated);
-
-                } else {
-                    new_position_filtrated = realloc(new_position_filtrated, sizeof(int) * new_number_word_filtrated);
-
-                }
-                new_position_filtrated[new_number_word_filtrated - 1] = position_word_filtarted[i];
-
-            }
             i++;
 
-        }
-        final_number_word_filtrated = new_number_word_filtrated;
-        final_position_filtrated = new_position_filtrated;
+
 
         node = tree_successor_information_node(node);
     }
-    int k = 0;
-    while (k<final_number_word_filtrated)
+    if (save == 1) {
+
+
+        number_word_filtated++;
+        if(number_word_filtated==1){
+            position_word_filtarted = malloc(sizeof(int) * number_word_filtated);
+
+        }else{
+            position_word_filtarted = realloc(position_word_filtarted, sizeof(int) * number_word_filtated);
+
+        }
+        position_word_filtarted[number_word_filtated - 1] = number_of_words_into_dictionary*length_words;
+
+    }
+
 }
 
 int check_if_word_exist(char *dic,char *word){
@@ -743,12 +833,13 @@ int numero_di_istanze_NoncorrettaPrimaDiI(struct character_node *x, char k, int 
                 i++;
             }
             node = tree_successor_character_node(node);
-            if (node->position >= position) {
-                return i;
-            }
             if (node == NULL || node->c > k) {
                 return i;
             }
+            if (node->position >= position) {
+                return i;
+            }
+
         }
     }
 }
@@ -826,12 +917,13 @@ struct information_node *tree_minimum_information_node(struct information_node *
     return x;
 }
 
-struct character_node *tree_maximum_character_node(struct character_node *x) {
-    while (x->right != NULL) {
-        x = x->right;
+struct word_node *tree_minimum_word_node(struct word_node *x) {
+    while (x->left != NULL) {
+        x = x->left;
     }
     return x;
 }
+
 
 struct character_node *tree_successor_character_node(struct character_node *x) {
     if (x->right != NULL) {
@@ -855,7 +947,17 @@ struct information_node *tree_successor_information_node(struct information_node
     }
     return y;
 }
-
+struct word_node *tree_successor_word_node(struct word_node *x) {
+    if (x->right != NULL) {
+        return tree_minimum_word_node(x->right);
+    }
+    struct word_node *y = x->p;
+    while (y != NULL && x == y->right) {
+        x = y;
+        y = y->p;
+    }
+    return y;
+}
 
 
 void tree_insert_character_node(struct character_tree *T, struct character_node *z) {
@@ -894,6 +996,31 @@ void tree_insert_information_node(struct information_tree *T, struct information
     if (y == NULL) {
         T->root = z;
     } else if (z->c < y->c) {
+        y->left = z;
+    } else {
+        y->right = z;
+    }
+}
+
+//0 first string is less
+//1 second string is less
+//2 equal
+void tree_insert_word_node(struct word_tree *T, struct word_node *z) {
+    struct word_node *y = NULL;
+    struct word_node *x = T->root;
+    while (x != NULL) {
+        y = x;
+
+        if (confronto_stringhe_fine(z->c,x->c,length_words)==0) {
+            x = x->left;
+        } else {
+            x = x->right;
+        }
+    }
+    z->p = y;
+    if (y == NULL) {
+        T->root = z;
+    } else if (confronto_stringhe_fine(z->c,y->c,length_words)==0) {
         y->left = z;
     } else {
         y->right = z;
