@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 struct character_node {
     char c;
@@ -62,7 +61,7 @@ struct word_node *tree_minimum_word_node(struct word_node *x);
 struct character_node *tree_search_character_node(struct character_node *x, char k);
 void confronta_nuove();
 int numero_di_istanze_corretta(struct character_node *x, char k);
-
+int confronto_stringhe_heap(int pos1,int pos2,int len);
 int numero_di_istanze_NoncorrettaPrimaDiI(struct character_node *x, char k, int position);
 struct information_node *tree_successor_information_node(struct information_node *x);
 void tree_insert_character_node(struct character_tree *T, struct character_node *z);
@@ -77,12 +76,21 @@ void tree_insert_information_node(struct information_tree *T, struct information
 //void rb_insert_fixup_characters_word_three(struct characters_word_three *T, struct characters_word_node *z);
 int check_if_word_exist(char *dic,char *word);
 struct word_node *tree_successor_word_node(struct word_node *x);
+int parent(int i);
+int left(int i);
+int right(int i);
+void swap(int pos1, int pos2, int length);
+void max_heapify(int i);
+void build_max();
+void heapSort();
+
 void ordina();
+void ordina2();
 int length_words;
 char *dictionary;
 char *filter_dictionary;
 int number_of_words_into_dictionary;
-int buffer = 10;
+int buffer = 5;
 int test = 0;
 int lenght;
 struct character_tree *word_to_search;
@@ -94,23 +102,24 @@ int end_game = 0;
 int number_word_filtated;
 int *position_word_filtarted;
 int prova = 1;
+int heap_size;
 int main() {
     length_words = 0;
-     dictionary = NULL;
+    dictionary = NULL;
     filter_dictionary = NULL;
     number_of_words_into_dictionary = 0;
-    buffer = 10;
+    buffer = 5;
     test = 0;
-     lenght = 0;
-     word_to_search = NULL;
+    lenght = 0;
+    word_to_search = NULL;
     word_to_check = NULL;
     information = NULL;
     dictionary_filter = NULL;
-     number = 0;
-     end_game = 0;
-     number_word_filtated = 0;
+    number = 0;
+    end_game = 0;
+    number_word_filtated = 0;
     position_word_filtarted = NULL;
-     prova = 1;
+    prova = 1;
     setup();
     if(information!=NULL){
         liberaAlberi_informazione(information->root);
@@ -131,7 +140,7 @@ int main() {
 void setup() {
     if (fscanf(stdin, "%d", &length_words) == 1) {
     };
-    dictionary = malloc((sizeof(char)) * length_words * 10);
+    dictionary = malloc((sizeof(char)) * length_words * 5);
     number_of_words_into_dictionary = 0;
     insert_word_into_dictionary();
     char temp = 0;
@@ -306,7 +315,7 @@ void read_command() {
         if(information!=NULL){
             liberaAlberi_informazione(information->root);
             free(information);
-        information = NULL;
+            information = NULL;
         }
         if(dictionary_filter!=NULL){
             liberaParola(dictionary_filter->root);
@@ -315,14 +324,14 @@ void read_command() {
 
         }
         free(position_word_filtarted);
-       number = 0;
+        number = 0;
         end_game = 0;
-         number_word_filtated = 0;
+        number_word_filtated = 0;
         position_word_filtarted = NULL;
 
         new_game();
     } else if (temp == 's') {
-        ordina();
+        ordina2();
         for (int i = 0; i < 15; i++) {
             temp = getchar_unlocked();
         }
@@ -347,7 +356,7 @@ void read_command() {
 
             number_of_words_into_dictionary++;
             buffer++;
-            if (buffer % 10 == 0) {
+            if (buffer % 5 == 0) {
                 dictionary = realloc(dictionary, (sizeof(char) * length_words * buffer));
             }
             //insert tree characters into tree words
@@ -362,7 +371,36 @@ void read_command() {
     }
 
 }
+void ordina2(){
+    heapSort();
+    if(position_word_filtarted!=0){
+        int i = 0;
+        while (i<number_word_filtated){
+            int k = 0;
 
+            while (k<length_words){
+                putchar_unlocked(dictionary[position_word_filtarted[i]+k]);
+                //printf("%c",word_node->c[k]);
+                k++;
+            }
+            putchar_unlocked('\n');
+            i++;
+        }
+    }else{
+        int i = 0;
+        while (i<number_of_words_into_dictionary){
+            int k = 0;
+
+            while (k<length_words){
+                putchar_unlocked(dictionary[i*length_words+k]);
+                //printf("%c",word_node->c[k]);
+                k++;
+            }
+            putchar_unlocked('\n');
+            i++;
+        }
+    }
+}
 void ordina(){
 
     struct word_tree* word_tree = malloc(sizeof (struct word_tree));
@@ -410,10 +448,12 @@ void ordina(){
         int k = 0;
 
         while (k<length_words){
-            printf("%c",word_node->c[k]);
+            putchar_unlocked(word_node->c[k]);
+            //printf("%c",word_node->c[k]);
             k++;
         }
-        printf("\n");
+        putchar_unlocked('\n');
+        //printf("\n");
 
         word_node = tree_successor_word_node(word_node);
     }
@@ -456,12 +496,12 @@ void controlla_corrispondeza() {
             }
         }
     }
-if(correct_word==length_words){
+    if(correct_word==length_words){
 
-    printf("ok\n");
-    end_game = 1;
-    return;
-}
+        printf("ok\n");
+        end_game = 1;
+        return;
+    }
     //Check condiction to |
     node_check = tree_minimum_character_node(word_to_check->root);
 
@@ -476,7 +516,7 @@ if(correct_word==length_words){
             while (node_check!=NULL && old == node_check->c) {
                 if (node_check->correct == -1) {
                     int numerto_nonCorrette = numero_di_istanze_NoncorrettaPrimaDiI(word_to_check->root, node_check->c,
-                                                          node_check->position);
+                                                                                    node_check->position);
 
                     if (numerto_nonCorrette >= numero_di_instanze - numero_corrette) {
 
@@ -502,94 +542,123 @@ if(correct_word==length_words){
     }
 
 
-        node_check = tree_minimum_character_node(word_to_check->root);
-        int numeri_piu ;
-        int numeri_tarttino ;
-        int numeri_sbarra;
-        int x = 0;
-        while(x<length_words) {
-            //set information
-            struct information_node *node = tree_search_information_node(information->root, node_check->c);
-             numeri_piu = 0;
-             numeri_tarttino = 0;
-             numeri_sbarra = 0;
-            struct information_node* node_info = NULL;
-            if (node == NULL) {
-                  node_info = malloc(sizeof(struct information_node));
-                  node_info->c = node_check->c;
-                  node_info->counter_position=0;
-                  node_info->counter_noposition = 0;
-                  node_info->noposition = NULL;
-                  node_info->position = NULL;
-                  node_info->p=NULL;
-                  node_info->right=NULL;
-                  node_info->left = NULL;
-                  node_info->min = 0;
-                  node_info->number_correct = -1;
-                tree_insert_information_node(information,node_info);
-            }else{
-                node_info = node;
+    node_check = tree_minimum_character_node(word_to_check->root);
+    int numeri_piu ;
+    int numeri_tarttino ;
+    int numeri_sbarra;
+    int x = 0;
+    while(x<length_words) {
+        //set information
+        struct information_node *node = tree_search_information_node(information->root, node_check->c);
+        numeri_piu = 0;
+        numeri_tarttino = 0;
+        numeri_sbarra = 0;
+        struct information_node* node_info = NULL;
+        if (node == NULL) {
+            node_info = malloc(sizeof(struct information_node));
+            node_info->c = node_check->c;
+            node_info->counter_position=0;
+            node_info->counter_noposition = 0;
+            node_info->noposition = NULL;
+            node_info->position = NULL;
+            node_info->p=NULL;
+            node_info->right=NULL;
+            node_info->left = NULL;
+            node_info->min = 0;
+            node_info->number_correct = -1;
+            tree_insert_information_node(information,node_info);
+        }else{
+            node_info = node;
+        }
+        char temp = node_check->c;
+        while (node_check!=NULL && temp == node_check->c) {
+            if (outpi[node_check->position] == '+') {
+                int check = 1;
+                for(int k = 0;k<node_info->counter_position;k++){
+                    if(node_info->position[k] == node_check->position){
+                        check = 0;
+                    }
+                }
+                numeri_piu++;
+
+                if(check==1){
+                    node_info->counter_position++;
+                    node_info->position = realloc(node_info->position, node_info->counter_position * sizeof(int));
+                    node_info->position[node_info->counter_position - 1] = node_check->position;
+                }
+
+            } else if (outpi[node_check->position] == '|') {
+                int check = 1;
+                for(int k = 0;k<node_info->counter_noposition;k++){
+                    if(node_info->noposition[k] == node_check->position){
+                        check = 0;
+                    }
+                }
+                numeri_tarttino++;
+
+                if(check==1) {
+                    node_info->counter_noposition++;
+                    node_info->noposition = realloc(node_info->noposition,
+                                                    node_info->counter_noposition * sizeof(int));
+
+                    node_info->noposition[node_info->counter_noposition - 1] = node_check->position;
+                }
+            } else if (outpi[node_check->position] == '/') {
+                int check = 1;
+                for(int k = 0;k<node_info->counter_noposition;k++){
+                    if(node_info->noposition[k] == node_check->position){
+                        check = 0;
+                    }
+                }
+                numeri_sbarra++;
+
+                if(check==1) {
+
+                    node_info->counter_noposition++;
+                    node_info->noposition = realloc(node_info->noposition,
+                                                    node_info->counter_noposition * sizeof(int));
+                    node_info->noposition[node_info->counter_noposition - 1] = node_check->position;
+                }
             }
-                char temp = node_check->c;
-                while (node_check!=NULL && temp == node_check->c) {
-                    if (outpi[node_check->position] == '+') {
-                        numeri_piu++;
-                        node_info->counter_position++;
-                        node_info->position = realloc(node_info->position, node_info->counter_position * sizeof(int));
-                        node_info->position[node_info->counter_position - 1] = node_check->position;
-                        //printf("%c --- %d\n",node_info->c,node_info->position[node_info->counter_position - 1]+1);
-                    } else if (outpi[node_check->position] == '|') {
-
-                        numeri_tarttino++;
-                        node_info->counter_noposition++;
-                        node_info->noposition = realloc(node_info->noposition,
-                                                        node_info->counter_noposition * sizeof(int));
-                        node_info->noposition[node_info->counter_noposition - 1] = node_check->position;
-                    } else if (outpi[node_check->position] == '/') {
-                        numeri_sbarra++;
-                        node_info->counter_noposition++;
-                        node_info->noposition = realloc(node_info->noposition,
-                                                        node_info->counter_noposition * sizeof(int));
-                        node_info->noposition[node_info->counter_noposition - 1] = node_check->position;
-                    }
-                    temp = node_check->c;
-                    node_check = tree_successor_character_node(node_check);
-                   // printf("%d\n",x);
-                    //TODO
-                    x++;
-
-                }
-                int min = 0;
-                int esatto = -1;
-                if(numeri_sbarra>0){
-
-                    esatto = numeri_piu+numeri_tarttino;
-                    min = esatto;
-                    //printf("%d -- %d",node_info->c,esatto);
-                    node_info->number_correct = esatto;
-                    node_info->min = min;
-                }else{
-                    min = numeri_tarttino +numeri_piu;
-
-                    if(min>node_info->min){
-
-                        node_info->min = min;
-                    }
-                    node_info->number_correct = esatto;
-                }
-
-
-
+            temp = node_check->c;
+            node_check = tree_successor_character_node(node_check);
+            //TODO
+            x++;
 
         }
+        int min = 0;
+        int esatto = -1;
+        if(numeri_sbarra>0){
+
+            esatto = numeri_piu+numeri_tarttino;
+            min = esatto;
+            node_info->number_correct = esatto;
+            node_info->min = min;
+        }else{
+            min = numeri_tarttino +numeri_piu;
+
+            if(min>node_info->min){
+
+                node_info->min = min;
+            }
+            node_info->number_correct = esatto;
+        }
+
+
+
+
+    }
     confronto();
 
 
 
     for (int i = 0; i < length_words; ++i) {
-        printf("%c", outpi[i]);
+        putchar_unlocked(outpi[i]);
+        //printf("%c", outpi[i]);
     }
-    printf("\n");
+    putchar_unlocked('\n');
+
+    //printf("\n");
     printf("%d\n",number_word_filtated);
 
 
@@ -625,180 +694,197 @@ int confronto_stringhe_fine(char *c1,char *c2,int len){
     }
     return 2;
 }
+
+int confronto_stringhe_heap(int pos1,int pos2,int len){
+    int i = 0;
+    while(i<len){
+        if(dictionary[pos1 + i]>dictionary[pos2 + i]){
+            return 1;
+        } else if(dictionary[pos1 + i]<dictionary[pos2 + i]){
+            return 0;
+        }
+        i++;
+    }
+    return 2;
+}
 void confronto() {
     int i = 0;
 
 
     struct information_node *node = NULL;
     if(information!=NULL && information->root!=NULL){
-         node = tree_minimum_information_node(information->root);
+        node = tree_minimum_information_node(information->root);
     }
     while (node != NULL){
-    if (number_word_filtated == 0) {
-        int *pos = node->position;
-        int *nopos = node->noposition;
-        int min = node->min;
-        int correct = node->number_correct;
-        int save = 1;
-        i = 0;
-        while (i < number_of_words_into_dictionary) {
+        if (number_word_filtated == 0) {
+            int *pos = node->position;
+            int *nopos = node->noposition;
+            int min = node->min;
+            int correct = node->number_correct;
+            int save = 1;
+            i = 0;
+            while (i < number_of_words_into_dictionary) {
 
-            save = 1;
-            int j = 0;
-            while (j < node->counter_position) {
-                if (dictionary[i * length_words + pos[j]] != node->c) {
-                    save = 0;
-                    break;
-                }
-                j++;
-            }
-            if (save != 0) {
-                j = 0;
-
-                while (j < node->counter_noposition) {
-
-                    if (dictionary[i * length_words + nopos[j]] == node->c) {
-
+                save = 1;
+                int j = 0;
+                while (j < node->counter_position) {
+                    if (dictionary[i * length_words + pos[j]] != node->c) {
                         save = 0;
                         break;
                     }
                     j++;
                 }
-            }
-            if (save != 0) {
-                //TODO
-                j = 0;
-                int x = 0;
-                while (j < length_words) {
-                    if (dictionary[i * length_words + j] == node->c) {
-                        x++;
+                if (save != 0) {
+                    j = 0;
+
+                    while (j < node->counter_noposition) {
+
+                        if (dictionary[i * length_words + nopos[j]] == node->c) {
+
+                            save = 0;
+                            break;
+                        }
+                        j++;
                     }
-                    j++;
                 }
-                if (x < min) {
-                    save = 0;
-                }
-                if(x==0 && min==0){
-                    save = 1;
-                }
-                if (correct != -1) {
-                    if (correct != x) {
+                if (save != 0) {
+                    //TODO
+                    j = 0;
+                    int x = 0;
+                    while (j < length_words) {
+                        if (dictionary[i * length_words + j] == node->c) {
+                            x++;
+                        }
+                        j++;
+                    }
+                    if (x < min) {
                         save = 0;
                     }
-                }
-
-            }
-            if (save == 1) {
-
-                number_word_filtated++;
-                if(number_word_filtated==1){
-                    if(position_word_filtarted!=NULL){
-                        free(position_word_filtarted);
-                        position_word_filtarted=NULL;
+                    if(x==0 && min==0){
+                        save = 1;
                     }
-                    position_word_filtarted = malloc(sizeof(int) * number_word_filtated);
-
-                }else{
-                    position_word_filtarted = realloc(position_word_filtarted, sizeof(int) * number_word_filtated);
+                    if (correct != -1) {
+                        if (correct != x) {
+                            save = 0;
+                        }
+                    }
 
                 }
-                position_word_filtarted[number_word_filtated - 1] = i * length_words;
-            }
-            i++;
+                if (save == 1) {
 
-        }
-    }else{
-        int *pos = node->position;
-        int *nopos = node->noposition;
-        int min = node->min;
-        int correct = node->number_correct;
-        int save = 1;
+                    number_word_filtated++;
+                    if(number_word_filtated==1){
+                        if(position_word_filtarted!=NULL){
+                            free(position_word_filtarted);
+                            position_word_filtarted=NULL;
+                        }
+                        position_word_filtarted = malloc(sizeof(int) * number_word_filtated);
 
-        int new_number_word_filtrated=0;
-        int *new_position_filtrated = NULL;
+                    }else{
+                        position_word_filtarted = realloc(position_word_filtarted, sizeof(int) * number_word_filtated);
 
-
-        i = 0;
-
-        while (i < number_word_filtated) {
-            save = 1;
-            int j = 0;
-
-            while (j < node->counter_position) {
-                if (dictionary[position_word_filtarted[i] + pos[j]] != node->c) {
-                    save = 0;
-
-
-                    break;
+                    }
+                    position_word_filtarted[number_word_filtated - 1] = i * length_words;
                 }
-                j++;
+                i++;
+
             }
-            if (save != 0) {
-                j = 0;
+        }else{
+            int *pos = node->position;
+            int *nopos = node->noposition;
+            int min = node->min;
+            int correct = node->number_correct;
+            int save = 1;
+
+            int new_number_word_filtrated=0;
+            int *new_position_filtrated = NULL;
 
 
-                while (j < node->counter_noposition) {
+            i = 0;
 
-                    if (dictionary[position_word_filtarted[i] + nopos[j]] == node->c) {
+            while (i < number_word_filtated) {
+                save = 1;
+                int j = 0;
+
+                while (j < node->counter_position) {
+                    if (dictionary[position_word_filtarted[i] + pos[j]] != node->c) {
                         save = 0;
+
+
                         break;
                     }
                     j++;
                 }
-            }
-            if (save != 0) {
-                //TODO
+                if (save != 0) {
+                    j = 0;
 
 
-                j = 0;
-                int x = 0;
-                while (j < length_words) {
-                    if (dictionary[position_word_filtarted[i] + j] == node->c) {
-                        x++;
+                    while (j < node->counter_noposition) {
+
+                        if (dictionary[position_word_filtarted[i] + nopos[j]] == node->c) {
+                            save = 0;
+                            break;
+                        }
+                        j++;
                     }
-                    j++;
                 }
-                if (x < min) {
-                    save = 0;
-                }
-                if(x==0 && min==0){
-                    save = 1;
-                }
-                if (correct != -1) {
-                    if (correct != x) {
+                if (save != 0) {
+                    //TODO
+
+
+                    j = 0;
+                    int x = 0;
+                    while (j < length_words) {
+                        if (dictionary[position_word_filtarted[i] + j] == node->c) {
+                            x++;
+                        }
+                        j++;
+                    }
+                    if (x < min) {
                         save = 0;
                     }
-                }
-
-            }
-            if (save == 1) {
-
-
-                new_number_word_filtrated++;
-                if(new_number_word_filtrated==1){
-                    new_position_filtrated = malloc( sizeof(int) * new_number_word_filtrated);
-
-                }else{
-                    new_position_filtrated = realloc(new_position_filtrated, sizeof(int) * new_number_word_filtrated);
+                    if(x==0 && min==0){
+                        save = 1;
+                    }
+                    if (correct != -1) {
+                        if (correct != x) {
+                            save = 0;
+                        }
+                    }
 
                 }
-                new_position_filtrated[new_number_word_filtrated - 1] = position_word_filtarted[i];
+                if (save == 1) {
+
+
+                    new_number_word_filtrated++;
+                    if(new_number_word_filtrated==1){
+                        if(new_position_filtrated!=NULL){
+                            free(new_position_filtrated);
+                            new_position_filtrated=NULL;
+                        }
+                        new_position_filtrated = malloc( sizeof(int) * new_number_word_filtrated);
+
+                    }else{
+                        new_position_filtrated = realloc(new_position_filtrated, sizeof(int) * new_number_word_filtrated);
+
+                    }
+                    new_position_filtrated[new_number_word_filtrated - 1] = position_word_filtarted[i];
+
+                }
+                i++;
 
             }
-            i++;
-
-        }
             free(position_word_filtarted);
             number_word_filtated = new_number_word_filtrated;
             position_word_filtarted = new_position_filtrated;
 
 
+        }
+
+
+
+        node = tree_successor_information_node(node);
     }
-
-
-
-    node = tree_successor_information_node(node);
-}
 
 
 }
@@ -823,57 +909,57 @@ void confronta_nuove() {
         i = 0;
 
 
-            int j = 0;
+        int j = 0;
 
-            while (j < node->counter_position) {
-                if (dictionary[number_of_words_into_dictionary*length_words + pos[j]] != node->c) {
+        while (j < node->counter_position) {
+            if (dictionary[number_of_words_into_dictionary*length_words + pos[j]] != node->c) {
+                save = 0;
+
+
+                break;
+            }
+            j++;
+        }
+        if (save != 0) {
+            j = 0;
+
+
+            while (j < node->counter_noposition) {
+
+                if (dictionary[number_of_words_into_dictionary*length_words + nopos[j]] == node->c) {
                     save = 0;
-
-
                     break;
                 }
                 j++;
             }
-            if (save != 0) {
-                j = 0;
+        }
+        if (save != 0) {
+            //TODO
 
 
-                while (j < node->counter_noposition) {
-
-                    if (dictionary[number_of_words_into_dictionary*length_words + nopos[j]] == node->c) {
-                        save = 0;
-                        break;
-                    }
-                    j++;
+            j = 0;
+            int x = 0;
+            while (j < length_words) {
+                if (dictionary[number_of_words_into_dictionary*length_words  + j] == node->c) {
+                    x++;
                 }
+                j++;
             }
-            if (save != 0) {
-                //TODO
-
-
-                j = 0;
-                int x = 0;
-                while (j < length_words) {
-                    if (dictionary[number_of_words_into_dictionary*length_words  + j] == node->c) {
-                        x++;
-                    }
-                    j++;
-                }
-                if (x < min) {
+            if (x < min) {
+                save = 0;
+            }
+            if (x == 0 && min == 0) {
+                save = 1;
+            }
+            if (correct != -1) {
+                if (correct != x) {
                     save = 0;
                 }
-                if (x == 0 && min == 0) {
-                    save = 1;
-                }
-                if (correct != -1) {
-                    if (correct != x) {
-                        save = 0;
-                    }
-                }
-
             }
 
-            i++;
+        }
+
+        i++;
 
 
 
@@ -919,7 +1005,7 @@ int numero_di_istanze(struct character_node *x, char k) {
     } else {
         while (1) {
             i++;
-              node = tree_successor_character_node(node);
+            node = tree_successor_character_node(node);
             if (node == NULL || node->c > k) {
                 return i;
             }
@@ -982,11 +1068,9 @@ void insert_word_into_dictionary() {
             temp = getchar_unlocked();
             i++;
         }
-        //printf("\n");
-        //printf("\n");
         number_of_words_into_dictionary++;
         buffer++;
-        if (buffer % 10 == 0) {
+        if (buffer % 5 == 0) {
             dictionary = realloc(dictionary, (sizeof(char) * length_words * buffer));
         }
         //insert tree characters into tree words
@@ -1147,6 +1231,97 @@ void tree_insert_word_node(struct word_tree *T, struct word_node *z) {
         y->left = z;
     } else {
         y->right = z;
+    }
+}
+
+int parent(int i){
+    return (i-1)/2;
+}
+int left(int i){
+    return 2*i + 1;
+}
+int right(int i){
+    return 2*i + 2;
+}
+void swap(int pos1, int pos2, int length){
+    char temp[length];
+    int i = 0;
+    while (i<length){
+        temp[i] = dictionary[pos1 + i];
+        dictionary[pos1 + i] = dictionary[pos2 + i];
+        dictionary[pos2 + i] = temp[i];
+        i++;
+    }
+}
+
+//0 first string is less
+//1 second string is less
+//2 equal
+void max_heapify(int i){
+    if(number_word_filtated!=0){
+       int l = left(i);
+       int r = right(i);
+       int max = 0;
+       if(l<heap_size && confronto_stringhe_heap(position_word_filtarted[l],position_word_filtarted[i],length_words)==1 ){
+           max = l;
+       } else{
+           max = i;
+       }
+       if(r< heap_size && confronto_stringhe_heap(position_word_filtarted[r],position_word_filtarted[max],length_words)==1){
+           max = r;
+       }
+       if(max!=i){
+           swap(position_word_filtarted[i],position_word_filtarted[max],length_words);
+           max_heapify(max);
+       }
+    } else{
+        int l = left(i);
+        int r = right(i);
+        int max = 0;
+        if(l<heap_size && confronto_stringhe_heap(l*length_words,i*length_words,length_words)==1 ){
+            max = l;
+        } else{
+            max = i;
+        }
+        if(r< heap_size && confronto_stringhe_heap(r*length_words,max*length_words,length_words)==1){
+            max = r;
+        }
+        if(max!=i){
+            swap(i*length_words,max*length_words,length_words);
+            max_heapify(max);
+        }
+    }
+}
+void build_max(){
+    if(number_word_filtated!=0){
+        heap_size = number_word_filtated;
+        for(int i = number_word_filtated/2;i>=0;i--){
+            max_heapify(i);
+        }
+    } else{
+        heap_size = number_of_words_into_dictionary;
+        for(int i = number_of_words_into_dictionary/2;i>=0;i--){
+            max_heapify(i);
+        }
+    }
+
+}
+
+void heapSort(){
+    if(number_word_filtated!=0){
+       build_max();
+        for(int i = number_word_filtated-1;i>=1;i--){
+            swap(position_word_filtarted[0],position_word_filtarted[i],length_words);
+            heap_size = heap_size-1;
+            max_heapify(0);
+        }
+    } else{
+        build_max();
+        for(int i = number_of_words_into_dictionary-1;i>=1;i--){
+            swap(0*length_words,i*length_words,length_words);
+            heap_size = heap_size-1;
+            max_heapify(0);
+        }
     }
 }
 
