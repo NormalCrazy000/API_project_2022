@@ -331,6 +331,8 @@ void read_command() {
 
         new_game();
     } else if (temp == 's') {
+
+
         ordina2();
         for (int i = 0; i < 15; i++) {
             temp = getchar_unlocked();
@@ -496,12 +498,7 @@ void controlla_corrispondeza() {
             }
         }
     }
-    if(correct_word==length_words){
 
-        printf("ok\n");
-        end_game = 1;
-        return;
-    }
     //Check condiction to |
     node_check = tree_minimum_character_node(word_to_check->root);
 
@@ -650,16 +647,23 @@ void controlla_corrispondeza() {
     }
     confronto();
 
+    if(correct_word==length_words){
 
+        printf("ok\n");
+        end_game = 1;
+        return;
+    }else{
+        for (int i = 0; i < length_words; ++i) {
+            putchar_unlocked(outpi[i]);
+            //printf("%c", outpi[i]);
+        }
+        putchar_unlocked('\n');
 
-    for (int i = 0; i < length_words; ++i) {
-        putchar_unlocked(outpi[i]);
-        //printf("%c", outpi[i]);
+        //printf("\n");
+        printf("%d\n",number_word_filtated);
+
     }
-    putchar_unlocked('\n');
 
-    //printf("\n");
-    printf("%d\n",number_word_filtated);
 
 
 
